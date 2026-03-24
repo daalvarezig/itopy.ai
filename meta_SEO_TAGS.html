@@ -1,0 +1,23 @@
+<!-- SEO & Social Media Meta Tags para WhatsApp/Telegram -->
+<meta name="description" content="itopy.ai — Tu recepcionista digital 24/7. Automatiza tu WhatsApp y no pierdas ni una venta más.">
+<meta property="og:title" content="itopy.ai — Plan de Digitalización para Pymes">
+<meta property="og:description" content="Asistentes de IA para comercios locales. Atención al cliente y reservas automáticas por WhatsApp las 24h.">
+<meta property="og:image" content="/avatar.png">
+<meta property="og:url" content="https://itopy.ai">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<title>itopy.ai — Recepcionista IA 24/7 para Pymes</title>
+
+<!-- MEJORAS PARA IOS (IPHONE) & PWA -->
+<link rel="apple-touch-icon" href="/avatar.png" />
+<meta name="apple-mobile-web-app-title" content="itopy.ai" />
+<link rel="manifest" href="/manifest.json" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<!-- SERVICE WORKER PARA CUMPLIR PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>

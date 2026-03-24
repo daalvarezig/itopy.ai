@@ -1,0 +1,174 @@
+import { useState, useEffect } from 'react';
+
+const ICONS = {
+  rocket: '/icons/icono_01.png', analytics: '/icons/icono_02.png', chat: '/icons/icono_03.png',
+  feat_ai: '/icons/icono_04.png', feat_cal: '/icons/icono_05.png', feat_dash: '/icons/icono_06.png',
+  feat_int: '/icons/icono_07.png', feat_glob: '/icons/icono_08.png', feat_sec: '/icons/icono_09.png',
+  multicanal: '/icons/icono_03.png', bell: '/icons/icono_04.png', folder: '/icons/icono_07.png',
+  copy: '/icons/icono_07.png',
+};
+
+const MOCK_ANSWERS = {
+  '¿Qué puede hacer RecepcionIA?': 'Soy tu asistente inteligente 24/7. Puedo gestionar citas, responder dudas avanzadas y sincronizar todo con tu WhatsApp y Calendario.',
+  'Cómo agendar una cita': '¡Fácil! Yo consulto tu Google Calendar en milisegundos y reservo el hueco enviándole un recordatorio al cliente por WhatsApp.',
+  '¿Cómo usar el bot?': 'Simplemente actívalo en tu web o WhatsApp. Yo aprendo sobre tu negocio y empiezo a vender por ti de inmediato.',
+  'Cómo integrarme con el CRM?': 'Me conecto vía API con HubSpot, Salesforce y Zapier.',
+};
+
+const SVG_ICONS = {
+  calendar: ( <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="12" width="52" height="46" rx="8" fill="#6366f1" opacity="0.15"/><rect x="6" y="12" width="52" height="46" rx="8" stroke="#6366f1" strokeWidth="3"/><rect x="6" y="20" width="52" height="12" fill="#6366f1" opacity="0.7"/><line x1="20" y1="6" x2="20" y2="20" stroke="#8b5cf6" strokeWidth="4" strokeLinecap="round"/><line x1="44" y1="6" x2="44" y2="20" stroke="#8b5cf6" strokeWidth="4" strokeLinecap="round"/><circle cx="22" cy="42" r="4" fill="#6366f1"/><circle cx="32" cy="42" r="4" fill="#8b5cf6"/><circle cx="42" cy="42" r="4" fill="#a78bfa"/><circle cx="22" cy="52" r="4" fill="#a78bfa"/><circle cx="32" cy="52" r="4" fill="#6366f1"/></svg> ),
+  chat: ( <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="6" width="44" height="34" rx="10" fill="#6366f1" opacity="0.2"/><rect x="4" y="6" width="44" height="34" rx="10" stroke="#6366f1" strokeWidth="3"/><path d="M8 40 L4 52 L18 44" fill="#6366f1" opacity="0.5"/><circle cx="16" cy="23" r="4" fill="#6366f1"/><circle cx="26" cy="23" r="4" fill="#8b5cf6"/><circle cx="36" cy="23" r="4" fill="#a78bfa"/><rect x="18" y="30" width="28" height="28" rx="8" fill="#8b5cf6" opacity="0.2"/><rect x="18" y="30" width="28" height="28" rx="8" stroke="#8b5cf6" strokeWidth="2.5"/><path d="M42 58 L46 62 L46 50" fill="#8b5cf6" opacity="0.5"/></svg> ),
+  bell: ( <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M32 6 C20 6 14 16 14 26 L14 40 L8 46 L56 46 L50 40 L50 26 C50 16 44 6 32 6Z" fill="#6366f1" opacity="0.2"/><path d="M32 6 C20 6 14 16 14 26 L14 40 L8 46 L56 46 L50 40 L50 26 C50 16 44 6 32 6Z" stroke="#6366f1" strokeWidth="3" strokeLinejoin="round"/><circle cx="32" cy="4" r="4" fill="#8b5cf6"/><path d="M26 46 Q26 54 32 54 Q38 54 38 46" stroke="#8b5cf6" strokeWidth="3" fill="none" strokeLinecap="round"/><circle cx="44" cy="14" r="8" fill="#f59e0b"/><text x="44" y="18" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">3</text></svg> ),
+  star: ( <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="32,4 39,24 60,24 44,37 50,58 32,45 14,58 20,37 4,24 25,24" fill="#6366f1" opacity="0.25"/><polygon points="32,4 39,24 60,24 44,37 50,58 32,45 14,58 20,37 4,24 25,24" stroke="#6366f1" strokeWidth="2.5" strokeLinejoin="round"/><polygon points="32,12 37,26 52,26 40,35 45,50 32,41 19,50 24,35 12,26 27,26" fill="#8b5cf6" opacity="0.5"/></svg> ),
+  check: ( <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="26" fill="#6366f1" opacity="0.15"/><circle cx="32" cy="32" r="26" stroke="#6366f1" strokeWidth="3"/><polyline points="18,32 27,42 46,22" stroke="#6366f1" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg> ),
+  bolt: ( <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="36,4 14,36 30,36 28,60 50,28 34,28" fill="#8b5cf6" opacity="0.3"/><polygon points="36,4 14,36 30,36 28,60 50,28 34,28" stroke="#6366f1" strokeWidth="3" strokeLinejoin="round"/><polygon points="36,10 18,36 31,36 29,54 48,30 35,30" fill="#6366f1" opacity="0.5"/></svg> ),
+};
+
+const FLOATING = [ { svg: 'calendar', top: '18%', left: '4%', size: 72, delay: '0s' }, { svg: 'chat', top: '38%', left: '2%', size: 64, delay: '1s' }, { svg: 'check', top: '62%', left: '5%', size: 68, delay: '2s' }, { svg: 'bell', top: '15%', right: '4%', size: 68, delay: '0.5s' }, { svg: 'bolt', top: '42%', right: '2%', size: 72, delay: '1.5s' }, { svg: 'star', top: '68%', right: '5%', size: 62, delay: '2.5s' } ];
+
+const CARDS = [
+  { icon: ICONS.rocket, title: 'Citas IA', gradient: 'linear-gradient(135deg, #4f8ef7 0%, #6c63ff 60%, #a78bfa 100%)', desc: 'Gestión de citas ', descBold: 'sin esfuerzo', descRest: ' gracias a un asistente impulsado por IA' },
+  { icon: ICONS.analytics, title: 'Analytics', gradient: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 60%, #c084fc 100%)', desc: 'Dashboard de desempeño ', descBold: '', descRest: 'con datos en tiempo real' },
+  { icon: ICONS.multicanal, title: 'Multicanal', gradient: 'linear-gradient(135deg, #38bdf8 0%, #6366f1 60%, #818cf8 100%)', desc: 'Chat en vivo, WhatsApp ', descBold: '', descRest: 'y más para una atención omnicanal' },
+];
+
+const STATS = [
+  { value: '98%', label: 'Satisfacción' },
+  { value: '24/7', label: 'Disponibilidad' },
+  { value: '+500', label: 'Clientes atendidos' },
+  { value: '<1s',  label: 'Tiempo de respuesta' },
+];
+
+const FEATURES = [
+  { icon: ICONS.feat_ai, title: 'IA Conversacional', desc: 'Responde consultas 24/7 con lenguaje natural avanzado.' },
+  { icon: ICONS.feat_cal, title: 'Gestión de Citas', desc: 'Agenda, modifica y cancela citas automáticamente.' },
+  { icon: ICONS.feat_dash, title: 'Analytics en Tiempo Real', desc: 'Dashboard con métricas de interacciones y rendimiento.' },
+  { icon: ICONS.feat_int, title: 'Integraciones', desc: 'Conecta con CRM, calendarios y sistemas existentes.' },
+  { icon: ICONS.feat_glob, title: 'Multicanal', desc: 'Web, WhatsApp, Telegram y más desde un solo panel.' },
+  { icon: ICONS.feat_sec, title: 'Seguridad Total', desc: 'Datos cifrados y cumplimiento GDPR garantizado.' },
+];
+
+function FloatingIcon({ svg, top, left, right, size, delay }) { return ( <div style={{ position: 'absolute', top, left, right, width: size, height: size, filter: 'drop-shadow(0 6px 18px rgba(99,102,241,0.3))', animation: 'floatY 4s ease-in-out infinite', animationDelay: delay, pointerEvents: 'none', zIndex: 2 }}>{SVG_ICONS[svg]}</div> ); }
+
+function BentoCard({ card }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{ borderRadius: 28, overflow: 'hidden', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(20px)', border: '1.5px solid rgba(255,255,255,0.4)', transform: hovered ? 'translateY(-8px) scale(1.01)' : 'none', transition: 'all 0.35s ease', cursor: 'pointer', flex: '1 1 280px', minWidth: 260, maxWidth: 360 }}>
+      <div style={{ height: 180, background: card.gradient, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', padding: '0 24px', gap: 16, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ width: 80, height: 80, flexShrink: 0, borderRadius: '50%', background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={card.icon} alt={card.title} style={{ width: 56, height: 56, objectFit: 'contain' }} /></div>
+        <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>{card.title}</span>
+      </div>
+      <div style={{ height: 180, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}><p style={{ color: '#fff', margin: 0 }}>{card.desc}<strong>{card.descBold}</strong>{card.descRest}</p></div>
+    </div>
+  );
+}
+
+function FeatureCard({ feat }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{ borderRadius: 20, padding: '28px 24px', background: hovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(12px)', transition: '0.3s' }}>
+      <div style={{ width: 72, height: 72, marginBottom: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={feat.icon} alt={feat.title} style={{ width: 50, height: 50, objectFit: 'contain' }} /></div>
+      <div style={{ fontWeight: 700, color: '#fff', marginBottom: 8 }}>{feat.title}</div>
+      <div style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.75)' }}>{feat.desc}</div>
+    </div>
+  );
+}
+
+export default function LandingPage() {
+  const [query, setQuery] = useState('');
+  const [response, setResponse] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showExit, setShowExit] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleS = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleS);
+    const handleM = (e) => { if (e.clientY < 5 && !showExit) setShowExit(true); };
+    document.addEventListener('mousemove', handleM);
+    return () => { window.removeEventListener('scroll', handleS); document.removeEventListener('mousemove', handleM); };
+  }, [showExit]);
+
+  const handleSug = (s) => {
+    setQuery(s); setResponse(''); setIsTyping(true);
+    setTimeout(() => { setResponse(MOCK_ANSWERS[s]); setIsTyping(false); }, 800);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', fontFamily: "'Inter', sans-serif", overflowX: 'hidden', background: `radial-gradient(ellipse at top left, #1a6fd4 0%, #3b9eff 18%, transparent 45%), radial-gradient(ellipse at top right, #87ceeb 0%, #60b8f5 20%, transparent 45%), radial-gradient(ellipse at bottom right, #7c3aed 0%, #a855f7 20%, transparent 50%), radial-gradient(ellipse at left center, #f97316 0%, #fb923c 15%, transparent 40%), linear-gradient(135deg, #1e3a8a 0%, #3b82f6 25%, #e0f2fe 50%, #c4b5fd 75%, #7c3aed 100%)` }}>
+      {/* EXIT MODAL */}
+      {showExit && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', color: '#1e3a8a', padding: 40, borderRadius: 28, textAlign: 'center', width: 400 }}>
+            <h2>¡Espera! 🎁</h2>
+            <p>Prueba RecepcionIA gratis hoy mismo.</p>
+            <button onClick={() => window.location.href='https://app.itopy.ai/login?mode=register'} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>PROBAR GRATIS</button>
+            <button onClick={() => setShowExit(false)} style={{ marginTop: 20, background: 'none', border: 'none', opacity: 0.5, cursor: 'pointer' }}>No, gracias.</button>
+          </div>
+        </div>
+      )}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '5%', left: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.35), transparent 70%)', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', top: '20%', right: '8%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(96,165,250,0.3), transparent 70%)', filter: 'blur(50px)' }} />
+      </div>
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 1 }}>
+        {FLOATING.map((f, i) => <FloatingIcon key={i} {...f} />)}
+      </div>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: 64, background: scrolled ? 'rgba(255,255,255,0.15)' : 'transparent', backdropFilter: scrolled ? 'blur(20px)' : 'none', WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.3)' : 'none', transition: 'all 0.3s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ position: 'relative', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', padding: 2, background: 'conic-gradient(from 0deg, #00f2ff, #7000ff, #00f2ff)', animation: 'rotNeo 3s linear infinite', boxShadow: '0 0 10px #00f2ff' }} />
+            <img src="/avatar.png" alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', zIndex: 2, objectFit: 'cover', border: '1.5px solid #1e3a8a' }} />
+          </div>
+          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#fff', textShadow: '0 0 10px #00f2ff' }}>RecepcionIA</span>
+        </div>
+        <div style={{ display: 'flex', gap: 32 }}> {['Productos', 'Precios', 'Blog'].map(item => <a key={item} href="#" style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500, fontSize: '0.95rem', textDecoration: 'none' }}>{item}</a>)} </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={() => window.location.href='https://app.itopy.ai/login?mode=login'} style={{ padding: '8px 20px', borderRadius: 50, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>Iniciar Sesión</button>
+          <button onClick={() => window.location.href='https://app.itopy.ai/login?mode=register'} style={{ padding: '8px 20px', borderRadius: 50, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>Comenzar</button>
+        </div>
+      </nav>
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <section style={{ textAlign: 'center', padding: '80px 24px 60px' }}>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)', fontWeight: 800, color: '#fff', lineHeight: 1.2, maxWidth: 700, margin: '0 auto 16px' }}><strong>Plataforma de Inteligencia Artificial</strong> para automatizar<br />la recepción, gestionar citas y atender clientes 24/7</h1>
+          <div style={{ maxWidth: 620, margin: '40px auto 20px', background: 'rgba(255,255,255,0.15)', borderRadius: 28, border: '2px solid rgba(255,255,255,0.4)', padding: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.12)', borderRadius: 22, border: '1px solid rgba(255,255,255,0.3)', padding: '10px 16px', gap: 12 }}>
+              <span style={{ fontSize: '1.1rem', opacity: 0.7 }}>🔍</span>
+              <input value={query} readOnly placeholder="Pregunta a RecepcionIA..." style={{ flex: 1, border: 'none', outline: 'none', color: '#fff', background: 'transparent' }} />
+              <button onClick={() => window.location.href='https://app.itopy.ai/login?mode=login'} style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', cursor: 'pointer', color: '#fff' }}>➤</button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 56 }}>
+            {Object.keys(MOCK_ANSWERS).map((s) => <button key={s} onClick={() => handleSug(s)} style={{ padding: '8px 18px', borderRadius: 50, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: '0.85rem', cursor: 'pointer' }}>{s}</button>)}
+          </div>
+          {(isTyping || response) && (
+            <div style={{ maxWidth: 620, margin: '20px auto', padding: 24, background: 'rgba(255,255,255,0.95)', borderRadius: 24, color: '#1e3a8a', textAlign: 'left', animation: 'fadeIn 0.3s' }}>
+              <div style={{ fontWeight: 800, color: '#6366f1', marginBottom: 8 }}>RecepcionIA dice:</div>
+              {isTyping ? 'Analizando...' : response}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', marginBottom: 72 }}>
+            {STATS.map((s) => <div key={s.label} style={{ textAlign: 'center' }}><div style={{ fontSize: '2rem', fontWeight: 800, color: '#fff' }}>{s.value}</div><div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)' }}>{s.label}</div></div>)}
+          </div>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 1100, margin: '0 auto' }}> {CARDS.map((card) => <BentoCard key={card.title} card={card} />)} </div>
+          <div style={{ maxWidth: 1100, margin: '80px auto 0' }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 40 }}>Todo lo que necesitas</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 80 }}> {FEATURES.map((f) => <FeatureCard key={f.title} feat={f} />)} </div>
+            <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.12)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 28, padding: '60px 40px', maxWidth: 600, margin: '0 auto 80px' }}>
+              <h3 style={{ fontSize: '2.3rem', fontWeight: 800, color: '#fff' }}>¿Listo para empezar?</h3>
+              <button onClick={() => window.location.href='https://app.itopy.ai/login?mode=register'} style={{ padding: '14px 40px', borderRadius: 50, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', marginTop: 20 }}>Crear Cuenta Gratis</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <style>{`
+        @keyframes rotNeo { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes floatY { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        input::placeholder { color: rgba(255,255,255,0.4); }
+      `}</style>
+    </div>
+  );
+}

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programa PILOTO Alcorcón — i-T@py AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:    #d4a017;
+      --gold2:   #f5c842;
+      --gold3:   #b8860b;
+      --dark:    #080808;
+      --card-bg: rgba(5, 3, 0, 0.82);
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--dark);
+      /* La imagen del flyer va aquí — coloca bg_piloto.jpg junto a este HTML */
+      background-image: url('bg_piloto.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-attachment: fixed;
+      font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+
+    /* Overlay oscuro sobre la imagen para legibilidad */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.55) 0%,
+        rgba(0,0,0,0.70) 60%,
+        rgba(0,0,0,0.85) 100%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Efecto brillo dorado sutil */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(212,160,23,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── BANNER SUPERIOR ── */
+    .banner {
+      background: linear-gradient(135deg, #1a1000, #2a1800);
+      border: 1px solid var(--gold3);
+      border-bottom: none;
+      border-radius: 20px 20px 0 0;
+      padding: 22px 28px 18px;
+      text-align: center;
+    }
+
+    .banner-tag {
+      display: inline-block;
+      background: linear-gradient(90deg, var(--gold3), var(--gold));
+      color: var(--dark);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .banner h1 {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--gold2);
+      line-height: 1.15;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(212,160,23,0.4);
+    }
+
+    .banner p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+    }
+
+    .offers {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .offer-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(212,160,23,0.07);
+      border: 1px solid rgba(212,160,23,0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    .offer-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    .offer-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold2);
+    }
+
+    .offer-text span {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.4;
+    }
+
+    /* ── TARJETA DEL FORMULARIO ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(212,160,23,0.3);
+      border-top: 2px solid var(--gold);
+      border-radius: 0 0 20px 20px;
+      padding: 28px 28px 32px;
+      backdrop-filter: blur(20px);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 22px;
+    }
+
+    .plazas-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(212,160,23,0.12);
+      border: 1px solid rgba(212,160,23,0.35);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold2);
+      margin-bottom: 20px;
+    }
+
+    .plazas-dot {
+      width: 7px; height: 7px;
+      background: #ff4444;
+      border-radius: 50%;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(212,160,23,0.2);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    input::placeholder { color: rgba(255,255,255,0.2); }
+
+    input:focus {
+      border-color: var(--gold);
+      background: rgba(212,160,23,0.06);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, var(--gold), var(--gold3));
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 900;
+      font-family: inherit;
+      color: var(--dark);
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      box-shadow: 0 4px 22px rgba(212,160,23,0.45);
+      text-transform: uppercase;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(212,160,23,0.55);
+    }
+
+    button[type="submit"]:active:not(:disabled) { transform: translateY(0); }
+    button[type="submit"]:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .spinner {
+      display: inline-block;
+      width: 15px; height: 15px;
+      border: 2px solid rgba(0,0,0,0.25);
+      border-top-color: var(--dark);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      display: none;
+      background: rgba(255,60,80,0.1);
+      border: 1px solid rgba(255,60,80,0.25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #ff7080;
+      margin-top: 12px;
+    }
+
+    .privacy {
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.2);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── ÉXITO ── */
+    .success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 16px 0 8px;
+    }
+
+    .success-icon {
+      width: 76px; height: 76px;
+      background: linear-gradient(135deg, var(--gold), var(--gold3));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 32px rgba(212,160,23,0.4);
+      animation: pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes pop { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
+
+    .success h2 {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--gold2);
+      margin-bottom: 10px;
+    }
+
+    .success p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+      max-width: 320px;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .footer a { color: rgba(212,160,23,0.5); text-decoration: none; }
+
+    /* ── WHATSAPP CTA ── */
+    .wa-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(37,211,102,0.08);
+      border: 1px solid rgba(37,211,102,0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      text-align: left;
+    }
+
+    .wa-icon { font-size: 22px; flex-shrink: 0; }
+
+    .wa-text strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    @media (max-width: 480px) {
+      .banner { padding: 18px 20px 14px; }
+      .banner h1 { font-size: 22px; }
+      .card { padding: 22px 20px 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- BANNER SUPERIOR -->
+  <div class="banner">
+    <div class="banner-tag">⚡ Oferta Exclusiva · Alcorcón</div>
+    <h1>¡Solo 5 plazas<br>para Alcorcón!</h1>
+    <p>Buscamos 5 negocios exclusivos en el sur de Madrid para liderar la transformación con IA.</p>
+
+    <div class="offers">
+      <div class="offer-item">
+        <div class="offer-icon">🎁</div>
+        <div class="offer-text">
+          <strong>Primer mes 100% GRATIS</strong>
+          <span>Plan Starter completo con WhatsApp IA 24/7 y panel de gestión. Sin pagos mensuales ni permanencia.</span>
+        </div>
+      </div>
+      <div class="offer-item">
+        <div class="offer-icon">⚡</div>
+        <div class="offer-text">
+          <strong>Configuración en 48h · 50% dto. en setup</strong>
+          <span>Setup listo en 2 días por solo 147€ (antes 295€). Si no te convence, te vas sin pagar nada más.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORMULARIO -->
+  <div class="card">
+    <div class="plazas-badge">
+      <div class="plazas-dot"></div>
+      Quedan plazas limitadas en Alcorcón
+    </div>
+
+    <div id="form-section">
+      <div class="card-title">Reserva tu plaza ahora</div>
+      <div class="card-sub">Te llamamos para confirmar en menos de 24h.</div>
+
+      <form id="cita-form" novalidate>
+        <div class="form-group">
+          <label for="nombre">Tu nombre</label>
+          <input type="text" id="nombre" placeholder="Ej. Carlos Martínez" autocomplete="name" required />
+        </div>
+
+        <div class="form-group">
+          <label for="telefono">Número de WhatsApp / teléfono</label>
+          <input type="tel" id="telefono" placeholder="Ej. +34 612 345 678" autocomplete="tel" required />
+        </div>
+
+        <button type="submit" id="submit-btn">🚀 Quiero mi plaza GRATIS</button>
+        <div class="error-msg" id="error-msg"></div>
+      </form>
+
+      <div class="wa-cta">
+        <div class="wa-icon">📲</div>
+        <div class="wa-text">
+          <strong>O escríbenos directamente</strong>
+          Envía <b>'PILOTO'</b> al <b>694 206 462</b> por WhatsApp para reservar hoy mismo.
+        </div>
+      </div>
+
+      <div class="privacy">Al enviar el formulario aceptas que nos pongamos en contacto contigo para gestionar tu solicitud.</div>
+    </div>
+
+    <!-- ÉXITO -->
+    <div class="success" id="success-section">
+      <div class="success-icon">✓</div>
+      <h2>¡Plaza reservada!</h2>
+      <p>Hemos recibido tu solicitud. Te llamamos en menos de 24h para confirmar tu acceso al Programa PILOTO de Alcorcón.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    Powered by <a href="https://itopy.ai" target="_blank">i-T@py AI</a> · Automatización · IA · Sistemas Inteligentes
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://xmjmfsjqkehtkgixrkxv.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtam1mc2pxa2VodGtnaXhya3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTMyMTQsImV4cCI6MjA4ODY2OTIxNH0.de3uWKPPR0_m22k5A3Wwv4pQGkXaQMnZEBH5c6bPI8c';
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const form       = document.getElementById('cita-form');
+  const btn        = document.getElementById('submit-btn');
+  const errorMsg   = document.getElementById('error-msg');
+  const formSec    = document.getElementById('form-section');
+  const successSec = document.getElementById('success-section');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const nombre   = document.getElementById('nombre').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+
+    errorMsg.style.display = 'none';
+
+    if (!nombre || !telefono) {
+      errorMsg.textContent = 'Por favor, rellena tu nombre y teléfono.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Enviando…';
+
+    const { error } = await db
+      .from('citas_piloto')
+      .insert([{ nombre, telefono }]);
+
+    if (error) {
+      errorMsg.textContent = 'Ocurrió un error. Inténtalo de nuevo o escríbenos por WhatsApp.';
+      errorMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '🚀 Quiero mi plaza GRATIS';
+      console.error(error);
+      return;
+    }
+
+    formSec.style.display    = 'none';
+    successSec.style.display = 'flex';
+  });
+</script>
+
+</body>
+</html>

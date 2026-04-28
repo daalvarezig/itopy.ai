@@ -1,19 +1,21 @@
 /* apps/itopy.ai/src/pages/LandingPage.jsx */
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { getStoredUTMs, captureUTMs } from '../utils/marketing';
-import { supabase } from '../utils/supabase';
 
 const ICONS = {
+  rocket:    '/icons/clean/icono_01.png',
+  analytics: '/icons/clean/icono_02.png',
+  chat:      '/icons/clean/icono_03.png',
   feat_ai:   '/icons/clean/icono_04.png',
   feat_cal:  '/icons/clean/icono_05.png',
   feat_dash: '/icons/clean/icono_06.png',
   feat_int:  '/icons/clean/icono_07.png',
   feat_glob: '/icons/clean/icono_08.png',
   feat_sec:  '/icons/clean/icono_09.png',
+  multicanal:'/icons/clean/icono_03.png',
 };
 
-const ROTATING_WORDS = ['negocio', 'comercio', 'empresa', 'tienda', 'servicio', 'local', 'pyme'];
+const ROTATING_WORDS = ['peluquerías', 'clínicas', 'restaurantes', 'talleres', 'comercios'];
 
 const ROTATING_CHANNEL = ['💬 WhatsApp', '📱 teléfono', '📸 Instagram', '💻 la web'];
 
@@ -66,6 +68,11 @@ const FLOATING = [
   { svg: 'star', top: '68%', right: '5%', size: 62, delay: '2.5s' },
 ];
 
+const CARDS = [
+  { icon: ICONS.rocket, title: 'Citas IA', gradient: 'linear-gradient(135deg, #4f8ef7 0%, #6c63ff 60%, #a78bfa 100%)', desc: 'Gestión de citas ', descBold: 'sin esfuerzo', descRest: ' gracias a un asistente impulsado por IA' },
+  { icon: ICONS.analytics, title: 'Analytics', gradient: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 60%, #c084fc 100%)', desc: 'Dashboard de desempeño ', descBold: '', descRest: 'con datos en tiempo real' },
+  { icon: ICONS.multicanal, title: 'Multicanal', gradient: 'linear-gradient(135deg, #38bdf8 0%, #6366f1 60%, #818cf8 100%)', desc: 'Chat en vivo, WhatsApp ', descBold: '', descRest: 'y más para una atención omnicanal' },
+];
 
 const STATS = [
   { num: 98, prefix: '', suffix: '%', label: 'Satisfacción' },
@@ -210,6 +217,24 @@ function FloatingIcon({ svg, top, left, right, size, delay }) {
   );
 }
 
+function BentoCard({ card }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{ borderRadius: 28, overflow: 'hidden', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(20px)', border: '1.5px solid rgba(255,255,255,0.4)', transform: hovered ? 'translateY(-8px) scale(1.01)' : 'none', transition: 'all 0.35s ease', cursor: 'pointer', flex: '1 1 280px', minWidth: 260, maxWidth: 360 }}>
+      <div style={{ height: 180, background: card.gradient, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', padding: '0 24px', gap: 16 }}>
+        <div style={{ width: 80, height: 80, flexShrink: 0, borderRadius: '50%', background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src={card.icon} alt={card.title} style={{ width: 56, height: 56, objectFit: 'contain' }} />
+        </div>
+        <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>{card.title}</span>
+      </div>
+      <div style={{ height: 180, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <p style={{ color: '#fff', margin: 0 }}>{card.desc}<strong>{card.descBold}</strong>{card.descRest}</p>
+      </div>
+    </div>
+  );
+}
+
 function FeatureCard({ feat }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -318,7 +343,7 @@ function AnimatedStat({ num, display, prefix = '', suffix = '', label }) {
 function PhoneMockup({ src, label, desc }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-      <div className="phone-mockup-shell" style={{
+      <div style={{
         width: 300,
         height: 600,
         borderRadius: 44,
@@ -386,7 +411,6 @@ function PlanCard({ plan }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="plan-card"
       style={{
         flex: '1 1 280px', minWidth: 280, maxWidth: 360,
         borderRadius: 24, overflow: 'hidden',
@@ -464,310 +488,6 @@ function ComparisonCell({ value, type }) {
   return <span style={{ color: '#fff', fontSize: '0.88rem', fontWeight: 500 }}>{value}</span>;
 }
 
-// ─── ROI Calculator ─────────────────────────────────────────────────────────
-
-function ROICalculator({ onCTAClick, horas, setHoras, coste, setCoste }) {
-  const mensual = horas * 4 * coste;
-  const anual = mensual * 12;
-
-  return (
-    <div className="roi-calculator" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.08)', borderRadius: 28, border: '1.5px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(20px)', padding: '40px 36px' }}>
-      <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', textAlign: 'center', marginBottom: 8, letterSpacing: '-.02em' }}>
-        Calcula cuánto te cuesta NO automatizar
-      </h3>
-      <p style={{ color: 'rgba(255,255,255,0.65)', textAlign: 'center', fontSize: '0.92rem', marginBottom: 36 }}>
-        Usa tus propios números — el resultado habla solo
-      </p>
-
-      {/* Slider: horas/semana */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', fontWeight: 600 }}>Horas/semana en tareas repetitivas</span>
-          <span style={{ color: '#a78bfa', fontWeight: 800, fontSize: '1.1rem' }}>{horas}h</span>
-        </div>
-        <input
-          type="range" min="1" max="40" value={horas}
-          onChange={e => setHoras(Number(e.target.value))}
-          className="roi-slider"
-          style={{ width: '100%', height: 6, appearance: 'none', WebkitAppearance: 'none', background: `linear-gradient(to right, #6366f1 ${(horas / 40) * 100}%, rgba(255,255,255,0.15) ${(horas / 40) * 100}%)`, borderRadius: 10, outline: 'none', cursor: 'pointer' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>1h</span>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>40h</span>
-        </div>
-      </div>
-
-      {/* Slider: coste/hora */}
-      <div style={{ marginBottom: 36 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', fontWeight: 600 }}>Coste/hora de tu tiempo (o empleado)</span>
-          <span style={{ color: '#a78bfa', fontWeight: 800, fontSize: '1.1rem' }}>{coste}€</span>
-        </div>
-        <input
-          type="range" min="8" max="80" value={coste}
-          onChange={e => setCoste(Number(e.target.value))}
-          className="roi-slider"
-          style={{ width: '100%', height: 6, appearance: 'none', WebkitAppearance: 'none', background: `linear-gradient(to right, #6366f1 ${((coste - 8) / 72) * 100}%, rgba(255,255,255,0.15) ${((coste - 8) / 72) * 100}%)`, borderRadius: 10, outline: 'none', cursor: 'pointer' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>8€</span>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>80€</span>
-        </div>
-      </div>
-
-      {/* Resultado */}
-      <div style={{ background: 'rgba(239,68,68,0.12)', border: '1.5px solid rgba(239,68,68,0.4)', borderRadius: 20, padding: '24px 28px', textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.85rem', fontWeight: 600, marginBottom: 6 }}>Estás perdiendo cada mes</div>
-        <div style={{ fontSize: '3rem', fontWeight: 800, color: '#ef4444', lineHeight: 1 }}>
-          {mensual.toLocaleString('es-ES')}€
-        </div>
-        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', marginTop: 8 }}>
-          {anual.toLocaleString('es-ES')}€ al año en tareas que la IA puede hacer por ti
-        </div>
-      </div>
-
-      <button
-        onClick={onCTAClick}
-        style={{ width: '100%', padding: '15px', borderRadius: 14, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', color: '#fff', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 8px 24px rgba(99,102,241,0.4)', transition: '0.2s' }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-      >
-        Quiero recuperar ese tiempo →
-      </button>
-    </div>
-  );
-}
-
-// ─── Lead Form (4 pasos) ────────────────────────────────────────────────────
-
-const FORM_STEPS = [
-  { id: 'datos', label: 'Datos' },
-  { id: 'empresa', label: 'Empresa' },
-  { id: 'volumen', label: 'Volumen' },
-  { id: 'desafio', label: 'Desafío' },
-];
-
-function LeadForm({ horas, coste }) {
-  const [step, setStep] = useState(0);
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [form, setForm] = useState({
-    nombre: '', email: '', telefono: '', cargo: '',
-    empresa: '', web: '', facturacion: '', equipo: '',
-    horas_semana: '', coste_hora: '',
-    desafio: '',
-  });
-
-  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
-
-  const canNext = () => {
-    if (step === 0) return form.email.trim().length > 0;
-    if (step === 1) return form.empresa.trim().length > 0;
-    if (step === 2) return true;
-    if (step === 3) return form.desafio.trim().length > 0;
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    setSending(true);
-    const utms = getStoredUTMs();
-    const costeMensual = (horas || 10) * 4 * (coste || 20);
-    try {
-      await supabase.from('leads').insert({
-        nombre: form.nombre || null,
-        email: form.email,
-        telefono: form.telefono || null,
-        cargo: form.cargo || null,
-        empresa: form.empresa || null,
-        web: form.web || null,
-        facturacion: form.facturacion || null,
-        equipo: form.equipo || null,
-        horas_semana: horas || null,
-        coste_hora: coste || null,
-        coste_mensual: costeMensual,
-        desafio: form.desafio || null,
-        utm_source: utms.utm_source || null,
-        utm_medium: utms.utm_medium || null,
-        utm_campaign: utms.utm_campaign || null,
-        utm_content: utms.utm_content || null,
-        utm_term: utms.utm_term || null,
-      });
-      setSent(true);
-    } catch (err) {
-      console.error('Error inserting lead:', err);
-    }
-    setSending(false);
-  };
-
-  const inputStyle = {
-    width: '100%', padding: '13px 16px', borderRadius: 12,
-    background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.2)',
-    color: '#fff', fontSize: '0.92rem', fontFamily: 'inherit', outline: 'none',
-    transition: 'border 0.2s',
-  };
-  const labelStyle = { display: 'block', color: 'rgba(255,255,255,0.75)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 6 };
-
-  if (sent) {
-    return (
-      <div className="lead-form" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: 28, border: '1.5px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(20px)', padding: '48px 36px', textAlign: 'center' }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>✓</div>
-        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>Recibido</h3>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem' }}>
-          Te contactaremos en menos de 24h para mostrarte cómo itopy.ai puede ayudarte.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="lead-form" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.08)', borderRadius: 28, border: '1.5px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(20px)', padding: '36px 36px 32px' }}>
-      <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff', textAlign: 'center', marginBottom: 4 }}>
-        Cuéntanos sobre tu negocio
-      </h3>
-      <p style={{ color: 'rgba(255,255,255,0.55)', textAlign: 'center', fontSize: '0.85rem', marginBottom: 24 }}>
-        En 30 segundos — sin compromiso
-      </p>
-
-      {/* Progress bar */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
-        {FORM_STEPS.map((s, i) => (
-          <div key={s.id} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ height: 4, borderRadius: 4, background: i <= step ? '#6366f1' : 'rgba(255,255,255,0.12)', transition: '0.3s', marginBottom: 6 }} />
-            <span style={{ fontSize: '0.7rem', color: i <= step ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{s.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Step 0: Datos */}
-      {step === 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>Email *</label>
-            <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="tu@email.com" style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div>
-            <label style={labelStyle}>Nombre</label>
-            <input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Tu nombre" style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div>
-            <label style={labelStyle}>Teléfono</label>
-            <input type="tel" value={form.telefono} onChange={e => set('telefono', e.target.value)} placeholder="+34 600 000 000" style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div>
-            <label style={labelStyle}>Cargo</label>
-            <input value={form.cargo} onChange={e => set('cargo', e.target.value)} placeholder="Propietario, gerente..." style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-        </div>
-      )}
-
-      {/* Step 1: Empresa */}
-      {step === 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>Nombre del negocio *</label>
-            <input value={form.empresa} onChange={e => set('empresa', e.target.value)} placeholder="Mi Negocio S.L." style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div>
-            <label style={labelStyle}>Web o redes sociales</label>
-            <input value={form.web} onChange={e => set('web', e.target.value)} placeholder="www.minegocio.com o @instagram" style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div>
-            <label style={labelStyle}>Facturación anual aproximada</label>
-            <select value={form.facturacion} onChange={e => set('facturacion', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="" style={{ background: '#1e1e2e' }}>Selecciona...</option>
-              <option value="<50k" style={{ background: '#1e1e2e' }}>Menos de 50.000€</option>
-              <option value="50k-150k" style={{ background: '#1e1e2e' }}>50.000€ - 150.000€</option>
-              <option value="150k-500k" style={{ background: '#1e1e2e' }}>150.000€ - 500.000€</option>
-              <option value="500k-1M" style={{ background: '#1e1e2e' }}>500.000€ - 1M€</option>
-              <option value=">1M" style={{ background: '#1e1e2e' }}>Más de 1M€</option>
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Equipo (personas)</label>
-            <select value={form.equipo} onChange={e => set('equipo', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="" style={{ background: '#1e1e2e' }}>Selecciona...</option>
-              <option value="1" style={{ background: '#1e1e2e' }}>Solo yo</option>
-              <option value="2-5" style={{ background: '#1e1e2e' }}>2 - 5</option>
-              <option value="6-15" style={{ background: '#1e1e2e' }}>6 - 15</option>
-              <option value="16-50" style={{ background: '#1e1e2e' }}>16 - 50</option>
-              <option value=">50" style={{ background: '#1e1e2e' }}>Más de 50</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      {/* Step 2: Volumen */}
-      {step === 2 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.9rem', textAlign: 'center', margin: '0 0 8px' }}>
-            Estos datos nos ayudan a preparar una propuesta personalizada
-          </p>
-          <div>
-            <label style={labelStyle}>Horas/semana en tareas repetitivas</label>
-            <input type="number" min="0" max="80" value={form.horas_semana || horas || ''} onChange={e => set('horas_semana', e.target.value)} placeholder={String(horas || 10)} style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div>
-            <label style={labelStyle}>Coste/hora estimado (€)</label>
-            <input type="number" min="0" max="200" value={form.coste_hora || coste || ''} onChange={e => set('coste_hora', e.target.value)} placeholder={String(coste || 20)} style={inputStyle} onFocus={e => e.target.style.borderColor = '#6366f1'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'} />
-          </div>
-          <div style={{ background: 'rgba(99,102,241,0.12)', borderRadius: 14, padding: '16px 20px', border: '1px solid rgba(99,102,241,0.3)' }}>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginBottom: 4 }}>Coste estimado mensual</div>
-            <div style={{ color: '#a78bfa', fontSize: '1.5rem', fontWeight: 800 }}>
-              {((form.horas_semana || horas || 10) * 4 * (form.coste_hora || coste || 20)).toLocaleString('es-ES')}€/mes
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Desafío */}
-      {step === 3 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>¿Cuál es tu mayor desafío ahora mismo? *</label>
-            <textarea
-              value={form.desafio} onChange={e => set('desafio', e.target.value)}
-              placeholder="Ej: No doy abasto respondiendo WhatsApps, pierdo citas porque no contesto a tiempo..."
-              rows={4}
-              style={{ ...inputStyle, resize: 'vertical', minHeight: 100 }}
-              onFocus={e => e.target.style.borderColor = '#6366f1'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Navigation buttons */}
-      <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-        {step > 0 && (
-          <button
-            onClick={() => setStep(s => s - 1)}
-            style={{ flex: '0 0 auto', padding: '13px 24px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: '0.2s' }}
-          >
-            Atrás
-          </button>
-        )}
-        {step < 3 ? (
-          <button
-            onClick={() => canNext() && setStep(s => s + 1)}
-            disabled={!canNext()}
-            style={{ flex: 1, padding: '13px', borderRadius: 12, background: canNext() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontWeight: 700, fontSize: '0.92rem', cursor: canNext() ? 'pointer' : 'not-allowed', opacity: canNext() ? 1 : 0.5, transition: '0.2s' }}
-          >
-            Siguiente →
-          </button>
-        ) : (
-          <button
-            onClick={() => canNext() && handleSubmit()}
-            disabled={!canNext() || sending}
-            style={{ flex: 1, padding: '13px', borderRadius: 12, background: canNext() ? 'linear-gradient(135deg, #25D366, #128C7E)' : 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontWeight: 700, fontSize: '0.92rem', cursor: canNext() ? 'pointer' : 'not-allowed', opacity: canNext() ? 1 : 0.5, boxShadow: canNext() ? '0 8px 20px rgba(37,211,102,0.3)' : 'none', transition: '0.2s' }}
-          >
-            {sending ? 'Enviando...' : 'Enviar y recibir propuesta'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -779,9 +499,6 @@ export default function LandingPage() {
   const [wordIndex, setWordIndex] = useState(0);
   const [channelIndex, setChannelIndex] = useState(0);
   const [reasonIndex, setReasonIndex] = useState(0);
-  const [roiHoras, setRoiHoras] = useState(10);
-  const [roiCoste, setRoiCoste] = useState(20);
-  const formRef = useRef(null);
 
   useEffect(() => {
     captureUTMs();
@@ -821,8 +538,8 @@ export default function LandingPage() {
 
       {/* ── Exit-intent modal ── */}
       {showExit && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
-          <div className="exit-modal-box" style={{ background: '#fff', color: '#1e3a8a', padding: 40, borderRadius: 28, textAlign: 'center', width: 400 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', color: '#1e3a8a', padding: 40, borderRadius: 28, textAlign: 'center', width: 400 }}>
             <h2>¡Espera! 🎁</h2>
             <p>Prueba itopy.ai gratis hoy mismo.</p>
             <button onClick={() => window.location.href = 'https://app.itopy.ai/login?mode=register'} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>PROBAR GRATIS</button>
@@ -838,20 +555,20 @@ export default function LandingPage() {
       </div>
 
       {/* ── Floating icons ── */}
-      <div className="floating-icons-wrap" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 1 }}>
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 1 }}>
         {FLOATING.map((f, i) => <FloatingIcon key={i} {...f} />)}
       </div>
 
       {/* ── Navbar ── */}
-      <nav className="landing-nav" style={{ position: 'sticky', top: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: 64, background: scrolled ? 'rgba(255,255,255,0.15)' : 'transparent', backdropFilter: scrolled ? 'blur(20px)' : 'none', WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.3)' : 'none', transition: 'all 0.3s' }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: 64, background: scrolled ? 'rgba(255,255,255,0.15)' : 'transparent', backdropFilter: scrolled ? 'blur(20px)' : 'none', WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.3)' : 'none', transition: 'all 0.3s' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ position: 'relative', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ position: 'relative', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', padding: 2, background: 'conic-gradient(from 0deg, #00f2ff, #7000ff, #00f2ff)', animation: 'rotNeo 3s linear infinite', boxShadow: '0 0 10px #00f2ff' }} />
             <img src="/avatar.png" alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', zIndex: 2, objectFit: 'cover', border: '1.5px solid #1e3a8a' }} />
           </div>
-          <span className="nav-brand-text" style={{ fontWeight: 800, fontSize: '1.2rem', color: '#fff', textShadow: '0 0 10px #00f2ff' }}>Agencia de inteligencia artificial</span>
+          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#fff', textShadow: '0 0 10px #00f2ff' }}>Agencia de inteligencia artificial</span>
         </div>
-        <div className="nav-links" style={{ display: 'flex', gap: 32 }}>
+        <div style={{ display: 'flex', gap: 32 }}>
           {NAV_ITEMS.map(item => (
             <a key={item.label} href={item.href} style={{ fontWeight: 800, fontSize: '1.2rem', color: '#fff', textShadow: '0 0 10px #00f2ff', textDecoration: 'none', transition: 'opacity 0.2s' }}
               onMouseEnter={e => e.target.style.opacity = '0.8'}
@@ -859,8 +576,8 @@ export default function LandingPage() {
             >{item.label}</a>
           ))}
         </div>
-        <div className="nav-btns" style={{ display: 'flex', gap: 12 }}>
-          <button className="nav-btn-login" onClick={() => window.location.href = 'https://app.itopy.ai/login?mode=login'} style={{ padding: '8px 20px', borderRadius: 50, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>Iniciar Sesión</button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={() => window.location.href = 'https://app.itopy.ai/login?mode=login'} style={{ padding: '8px 20px', borderRadius: 50, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>Iniciar Sesión</button>
           <button onClick={() => window.location.href = 'https://app.itopy.ai/login?mode=register'} style={{ padding: '8px 20px', borderRadius: 50, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>Comenzar</button>
         </div>
       </nav>
@@ -868,23 +585,23 @@ export default function LandingPage() {
       <div style={{ position: 'relative', zIndex: 2 }}>
 
         {/* ── Hero ── */}
-        <section className="hero-section" style={{ textAlign: 'center', padding: '80px 0 60px' }}>
-          <div className="hero-inner" style={{ width: '100%', padding: '0 40px', marginBottom: 16 }}>
+        <section style={{ textAlign: 'center', padding: '80px 0 60px' }}>
+          <div style={{ width: '100%', padding: '0 40px', marginBottom: 16 }}>
 
             {/* Rotating headline — línea 1 */}
-            <h1 className="hero-h1" style={{ fontSize: 'clamp(1.6rem, 3.8vw, 3.8rem)', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: 8, letterSpacing: '-.02em' }}>
-              La IA que transforma tu{' '}
+            <h1 style={{ fontSize: 'clamp(1.8rem, 3.8vw, 3.8rem)', fontWeight: 800, color: '#fff', lineHeight: 1.25, marginBottom: 8, whiteSpace: 'nowrap', overflow: 'visible' }}>
+              La IA que transforma{' '}
               <span key={wordIndex} className="rotating-word">{ROTATING_WORDS[wordIndex]}</span>
             </h1>
 
             {/* Rotating headline — línea 2 */}
-            <h2 className="hero-h2" style={{ fontSize: 'clamp(1.2rem, 3vw, 3rem)', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: 8, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 3rem)', fontWeight: 800, color: '#fff', lineHeight: 1.25, marginBottom: 8, whiteSpace: 'nowrap', overflow: 'visible' }}>
               ¿Cuántas ventas perdiste por no responder{' '}
               <span key={channelIndex} className="rotating-word">{ROTATING_CHANNEL[channelIndex]}</span>?
             </h2>
 
             {/* Rotating headline — línea 3 */}
-            <h3 className="hero-h3" style={{ fontSize: 'clamp(1.1rem, 2.6vw, 2.6rem)', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: 24, letterSpacing: '-.02em' }}>
+            <h3 style={{ fontSize: 'clamp(1.3rem, 2.6vw, 2.6rem)', fontWeight: 800, color: '#fff', lineHeight: 1.25, marginBottom: 24, whiteSpace: 'nowrap', overflow: 'visible' }}>
               ...{' '}
               <span key={reasonIndex} className="rotating-word">{ROTATING_REASON[reasonIndex]}</span>
             </h3>
@@ -895,71 +612,37 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Demo search bar — estilo trasteando */}
-          <div style={{ maxWidth: 860, margin: '48px auto 8px' }}>
-            <p style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.7)', marginBottom: 10, textAlign: 'left', paddingLeft: 20 }}>Pregunta a itopy.ai</p>
-            <div style={{ background: '#fff', borderRadius: 100, padding: '8px 12px', display: 'flex', alignItems: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', gap: 0 }}>
-              {/* Campo pregunta */}
-              <div style={{ flex: 1, padding: '0 20px' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999', marginBottom: 2 }}>¿Qué necesitas?</div>
-                <input
-                  value={query}
-                  readOnly
-                  placeholder="Ej: ¿Cómo funciona itopy.ai?"
-                  style={{ border: 'none', outline: 'none', fontSize: '0.92rem', fontWeight: 700, color: '#111', background: 'transparent', width: '100%', fontFamily: 'inherit' }}
-                />
-              </div>
-              {/* Botón */}
-              <button
-                onClick={() => window.location.href = 'https://app.itopy.ai/login?mode=login'}
-                style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: '1.1rem', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-              >🔍</button>
+          {/* Demo search bar */}
+          <div style={{ maxWidth: 760, margin: '48px auto 24px', background: 'rgba(255,255,255,0.15)', borderRadius: 32, border: '2px solid rgba(255,255,255,0.4)', padding: 7 }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.12)', borderRadius: 26, border: '1px solid rgba(255,255,255,0.3)', padding: '14px 22px', gap: 14 }}>
+              <span style={{ fontSize: '1.3rem', opacity: 0.7 }}>🔍</span>
+              <input value={query} readOnly placeholder="Pregunta a itopy.ai..." style={{ flex: 1, border: 'none', outline: 'none', color: '#fff', background: 'transparent', fontSize: '1.1rem', fontFamily: 'inherit' }} />
+              <button onClick={() => window.location.href = 'https://app.itopy.ai/login?mode=login'} style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: '1.1rem' }}>➤</button>
             </div>
           </div>
-          {/* Sugerencias */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', margin: '20px auto 48px', maxWidth: 860 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 56, maxWidth: 860, margin: '0 auto 56px' }}>
             {Object.keys(MOCK_ANSWERS).map(s => (
-              <button key={s} onClick={() => handleSug(s)} style={{ padding: '10px 20px', borderRadius: 50, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: '0.95rem', cursor: 'pointer', fontFamily: 'inherit', transition: '0.2s' }}
+              <button key={s} onClick={() => handleSug(s)} style={{ padding: '11px 22px', borderRadius: 50, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: '0.97rem', cursor: 'pointer', fontFamily: 'inherit', transition: '0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
               >{s}</button>
             ))}
           </div>
           {(isTyping || response) && (
-            <div style={{ maxWidth: 720, margin: '0 auto 40px', padding: '20px 28px', background: 'rgba(255,255,255,0.95)', borderRadius: 24, color: '#1e3a8a', textAlign: 'left', animation: 'fadeIn 0.3s', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ maxWidth: 620, margin: '20px auto', padding: 24, background: 'rgba(255,255,255,0.95)', borderRadius: 24, color: '#1e3a8a', textAlign: 'left', animation: 'fadeIn 0.3s', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
               <div style={{ fontWeight: 800, color: '#6366f1', marginBottom: 8 }}>itopy.ai dice:</div>
               {isTyping ? 'Analizando...' : response}
             </div>
           )}
 
           {/* Stats */}
-          <div className="stats-row" style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', marginBottom: 72 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', marginBottom: 72 }}>
             {STATS.map(s => <AnimatedStat key={s.label} {...s} />)}
           </div>
-        </section>
 
-        {/* ── ROI Calculator + Lead Form ── */}
-        <section className="roi-section" style={{ padding: '0 24px 80px', maxWidth: 1200, margin: '0 auto' }}>
-          <div className="roi-row" style={{ display: 'flex', gap: 24, alignItems: 'stretch' }}>
-            <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex' }}>
-              <ROICalculator
-                horas={roiHoras} setHoras={setRoiHoras}
-                coste={roiCoste} setCoste={setRoiCoste}
-                onCTAClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              />
-            </div>
-            <div ref={formRef} style={{ flex: '1 1 0', minWidth: 0, display: 'flex' }}>
-              <LeadForm horas={roiHoras} coste={roiCoste} />
-            </div>
-          </div>
-        </section>
-
-        <section style={{ textAlign: 'center', padding: '0 0 60px' }}>
           {/* Chat demo */}
           <div style={{ marginTop: 80 }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-.02em' }}>Mira cómo atiende itopy.ai</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>Mira cómo atiende itopy.ai</h2>
             <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 0 }}>Respuestas reales, en tiempo real, directamente en WhatsApp</p>
             <LiveChatDemo />
           </div>
@@ -967,30 +650,37 @@ export default function LandingPage() {
 
         {/* ── Demo Mockups ── */}
         <section style={{ padding: '60px 24px 80px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-.02em' }}>Ve la IA en acción</h2>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>Ve la IA en acción</h2>
           <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 60, fontSize: '1.05rem' }}>
             Casos reales de negocios que ya usan itopy.ai — pruébalos tú mismo
           </p>
 
           {/* Phone mockups row */}
-          <div className="phone-demos-row" style={{ display: 'flex', gap: 48, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 80 }}>
+          <div style={{ display: 'flex', gap: 48, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 80 }}>
             {DEMOS.map(demo => <PhoneMockup key={demo.label} {...demo} />)}
           </div>
 
           {/* Laptop mockup */}
           <div style={{ maxWidth: 780, margin: '0 auto', textAlign: 'center' }}>
             <div style={{ marginBottom: 28 }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-.02em' }}>RepAIr — Gestión inteligente para talleres</h3>
+              <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>RepAIr — Gestión inteligente para talleres</h3>
               <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.95rem' }}>Panel de control con IA integrada para talleres de reparación</p>
             </div>
             <LaptopMockup src="https://repair.itopy.ai/mockup.html" />
           </div>
         </section>
 
+        {/* ── Bento cards ── */}
+        <section style={{ padding: '0 24px 80px' }}>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 1100, margin: '0 auto' }}>
+            {CARDS.map(card => <BentoCard key={card.title} card={card} />)}
+          </div>
+        </section>
+
         {/* ── Precios ── */}
         <section id="precios" style={{ padding: '80px 24px', textAlign: 'center' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-.02em' }}>Planes y precios</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>Planes y precios</h2>
             <p style={{ color: 'rgba(255,255,255,0.9)', marginBottom: 16, fontSize: '1.15rem', fontWeight: 600 }}>Sin permanencia · Sin comisiones · Precios sin IVA</p>
             <p style={{ color: 'rgba(255,255,255,0.75)', marginBottom: 56, fontSize: '1rem', fontWeight: 500 }}>Empieza a recuperar clientes desde el primer día</p>
             <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -1008,7 +698,7 @@ export default function LandingPage() {
         {/* ── Productos ── */}
         <section id="productos" style={{ padding: '80px 24px', textAlign: 'center' }}>
           <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-.02em' }}>Resumen comparativo</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 12 }}>Resumen comparativo</h2>
             <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 48, fontSize: '1.05rem' }}>Todo de un vistazo — qué incluye cada plan</p>
 
             {/* Comparison table */}
@@ -1038,7 +728,7 @@ export default function LandingPage() {
             </div>
 
             {/* itopy vs Otros servicios */}
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-.02em' }}>itopy.ai vs Otros servicios</h2>
+            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', marginBottom: 10 }}>itopy.ai vs Otros servicios</h2>
             <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: 40, fontSize: '1rem', maxWidth: 600, margin: '0 auto 40px' }}>
               ¿Ya tienes otra herramienta de reservas? Aquí está la comparativa honesta.
             </p>
@@ -1075,7 +765,7 @@ export default function LandingPage() {
         {/* ── FAQ ── */}
         <section id="faq" style={{ padding: '40px 24px 80px' }}>
           <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 40, letterSpacing: '-.02em' }}>Preguntas Frecuentes</h2>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 40 }}>Preguntas Frecuentes</h2>
             <div style={{ textAlign: 'left' }}>
               {FAQ_DATA.map((faq, i) => <FaqItem key={i} q={faq.q} a={faq.a} />)}
             </div>
@@ -1085,8 +775,8 @@ export default function LandingPage() {
         {/* ── Features grid ── */}
         <section style={{ padding: '40px 24px 0' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 40, letterSpacing: '-.02em' }}>Todo lo que necesitas</h2>
-            <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 80 }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 40 }}>Todo lo que necesitas</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 80 }}>
               {FEATURES.map(f => <FeatureCard key={f.title} feat={f} />)}
             </div>
           </div>
@@ -1094,8 +784,8 @@ export default function LandingPage() {
 
         {/* ── CTA ── */}
         <section style={{ padding: '0 24px 120px', textAlign: 'center' }}>
-          <div className="cta-box" style={{ background: 'rgba(255,255,255,0.12)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 28, padding: '60px 40px', maxWidth: 600, margin: '0 auto' }}>
-            <h3 style={{ fontSize: '2.3rem', fontWeight: 800, color: '#fff', letterSpacing: '-.02em' }}>¿Listo para empezar?</h3>
+          <div style={{ background: 'rgba(255,255,255,0.12)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 28, padding: '60px 40px', maxWidth: 600, margin: '0 auto' }}>
+            <h3 style={{ fontSize: '2.3rem', fontWeight: 800, color: '#fff' }}>¿Listo para empezar?</h3>
             <p style={{ color: 'rgba(255,255,255,0.8)', marginTop: 10 }}>Únete a cientos de comercios que ya están automatizando su atención.</p>
             <button
               onClick={() => handleWhatsAppClick('boton_central')}
@@ -1106,67 +796,6 @@ export default function LandingPage() {
             </button>
           </div>
         </section>
-
-        {/* ── Footer ── */}
-        <footer className="landing-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '60px 24px 32px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 40, marginBottom: 40 }}>
-
-              {/* Col 1 — Marca */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <img src="/avatar.png" alt="itopy.ai" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>itopy.ai</span>
-                </div>
-                <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', lineHeight: 1.6 }}>
-                  Inteligencia artificial para comercios locales. Automatiza tu atención al cliente 24/7.
-                </p>
-              </div>
-
-              {/* Col 2 — Contacto */}
-              <div>
-                <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem', marginBottom: 16 }}>Contacto</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-                  <a href="mailto:hola@itopy.ai" style={{ color: 'inherit', textDecoration: 'none' }}>hola@itopy.ai</a>
-                  <a href="tel:+34694206264" style={{ color: 'inherit', textDecoration: 'none' }}>+34 694 206 264</a>
-                  <span>Alcorcón, Madrid</span>
-                </div>
-              </div>
-
-              {/* Col 3 — Redes sociales */}
-              <div>
-                <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem', marginBottom: 16 }}>Redes sociales</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem' }}>
-                  <a href="https://wa.me/34694206264" target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>WhatsApp</a>
-                  <a href="https://t.me/itopyai" target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Telegram</a>
-                  <a href="https://instagram.com/itopy.ai" target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Instagram</a>
-                  <a href="https://facebook.com/itopy.ai" target="_blank" rel="noreferrer" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Facebook</a>
-                </div>
-              </div>
-
-              {/* Col 4 — Legal */}
-              <div>
-                <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem', marginBottom: 16 }}>Legal</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem' }}>
-                  <Link to="/aviso-legal" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Aviso Legal</Link>
-                  <Link to="/privacidad" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Política de Privacidad</Link>
-                  <Link to="/cookies" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Política de Cookies</Link>
-                  <Link to="/terminos" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>Términos y Condiciones</Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom bar */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>© {new Date().getFullYear()} itopy.ai SLU. Todos los derechos reservados.</span>
-              <div style={{ display: 'flex', gap: 20, fontSize: '0.8rem' }}>
-                <Link to="/privacidad" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Privacidad</Link>
-                <Link to="/terminos" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Términos</Link>
-                <Link to="/cookies" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Cookies</Link>
-              </div>
-            </div>
-          </div>
-        </footer>
 
       </div>
 
@@ -1198,92 +827,16 @@ export default function LandingPage() {
           transform-origin: top center;
           perspective: 1000px;
         }
-        .rotating-word-container { display: block; text-align: center; }
+        .rotating-word-container {
+          display: block;
+          text-align: center;
+        }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         * { box-sizing: border-box; }
         body { margin: 0; }
         input::placeholder { color: rgba(255,255,255,0.4); }
-        textarea::placeholder { color: rgba(255,255,255,0.4); }
         table td, table th { vertical-align: middle; }
-
-        /* ── ROI Slider thumb ── */
-        .roi-slider::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance: none;
-          width: 22px; height: 22px; border-radius: 50%;
-          background: #fff; border: 3px solid #6366f1;
-          box-shadow: 0 2px 8px rgba(99,102,241,0.4);
-          cursor: pointer;
-        }
-        .roi-slider::-moz-range-thumb {
-          width: 22px; height: 22px; border-radius: 50%;
-          background: #fff; border: 3px solid #6366f1;
-          box-shadow: 0 2px 8px rgba(99,102,241,0.4);
-          cursor: pointer;
-        }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 768px) {
-          .floating-icons-wrap { display: none !important; }
-          .nav-links { display: none !important; }
-          .roi-row { flex-direction: column !important; }
-        }
-
-        @media (max-width: 640px) {
-          /* Navbar */
-          .landing-nav { padding: 0 16px !important; }
-          .nav-brand-text { display: none !important; }
-          .nav-btn-login { display: none !important; }
-          .nav-btns button { padding: 7px 14px !important; font-size: 0.82rem !important; }
-
-          /* Hero */
-          .hero-section { padding: 48px 0 32px !important; }
-          .hero-inner { padding: 0 16px !important; }
-          .hero-h1 { font-size: clamp(1.5rem, 7vw, 2.2rem) !important; }
-          .hero-h2 { font-size: clamp(1.1rem, 5.5vw, 1.8rem) !important; }
-          .hero-h3 { font-size: clamp(1rem, 5vw, 1.6rem) !important; }
-
-          /* Stats */
-          .stats-row { gap: 20px !important; }
-
-          /* Phone demos — scroll horizontal */
-          .phone-demos-row {
-            flex-wrap: nowrap !important;
-            overflow-x: auto !important;
-            justify-content: flex-start !important;
-            padding: 0 16px 20px !important;
-            gap: 20px !important;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-          }
-          .phone-demos-row::-webkit-scrollbar { display: none; }
-          .phone-mockup-shell { width: 220px !important; height: 440px !important; border-radius: 32px !important; }
-
-          /* Cards + Calculator + Form */
-          .plan-card  { min-width: 0 !important; width: 100% !important; max-width: 100% !important; }
-          .roi-calculator { padding: 24px 20px !important; }
-          .lead-form { padding: 24px 20px !important; margin-top: 28px !important; }
-
-          /* Footer */
-          .footer-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 28px !important; }
-
-          /* Feature grid — 2 cols en móvil */
-          .feature-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
-
-          /* CTA box */
-          .cta-box { padding: 36px 20px !important; }
-
-          /* Exit modal */
-          .exit-modal-box { width: 100% !important; padding: 28px 20px !important; }
-        }
-
-        @media (max-width: 400px) {
-          .feature-grid { grid-template-columns: repeat(1, 1fr) !important; }
-          .footer-grid { grid-template-columns: 1fr !important; }
-          .hero-h1 { font-size: 1.4rem !important; }
-          .hero-h2 { font-size: 1.1rem !important; }
-          .hero-h3 { font-size: 1rem !important; }
-        }
       `}</style>
     </div>
   );

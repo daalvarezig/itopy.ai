@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1A3A5C" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="itopy" />
+  <title>itopy.ai Dashboard</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <style>
+    :root {
+      --primary: #1A3A5C;
+      --accent: #2E75B6;
+      --accent-light: #EBF3FB;
+      --success: #27AE60;
+      --warning: #F39C12;
+      --error: #E74C3C;
+      --bg: #F0F4F8;
+      --card: #FFFFFF;
+      --text: #1A1A2E;
+      --text-muted: #6B7280;
+      --border: #E2E8F0;
+      --radius: 16px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    /* ─── Header ─────────────────────────── */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 16px 20px 14px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-sub { font-size: 11px; opacity: 0.65; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .refresh-btn {
+      background: rgba(255,255,255,0.15); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .refresh-btn:hover { background: rgba(255,255,255,0.25); }
+    .refresh-btn.spinning { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .time-badge {
+      font-size: 12px; opacity: 0.75; background: rgba(255,255,255,0.12);
+      padding: 4px 10px; border-radius: 20px;
+    }
+    /* ─── Grid ───────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    @media (max-width: 500px) {
+      .grid { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+    }
+    .card-full { grid-column: 1 / -1; }
+    /* ─── Cards ──────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+    .card-header {
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-icon { font-size: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--primary); }
+    .card-badge {
+      margin-left: auto; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px; background: var(--accent-light);
+      color: var(--accent);
+    }
+    .card-body { padding: 12px 16px; }
+    /* ─── Status indicators ──────────────── */
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-green { background: var(--success); box-shadow: 0 0 6px rgba(39,174,96,0.5); }
+    .dot-red { background: var(--error); }
+    .dot-yellow { background: var(--warning); }
+    .dot-gray { background: #9CA3AF; }
+    /* ─── VPS containers ─────────────────── */
+    .container-list { display: flex; flex-direction: column; gap: 6px; }
+    .container-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 8px; background: var(--bg);
+      font-size: 13px;
+    }
+    .container-name { font-weight: 600; flex: 1; font-size: 12px; }
+    .container-status { font-size: 11px; color: var(--text-muted); }
+    /* ─── Tasks ──────────────────────────── */
+    .task-list { display: flex; flex-direction: column; gap: 4px; }
+    .task-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 6px 8px; border-radius: 8px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .task-row:hover { background: var(--bg); }
+    .task-title { font-size: 13px; flex: 1; line-height: 1.3; }
+    .task-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .priority-badge {
+      font-size: 10px; font-weight: 700; padding: 1px 6px;
+      border-radius: 6px; white-space: nowrap; margin-top: 1px;
+    }
+    .p-alta { background: #FDE8E8; color: #C0392B; }
+    .p-media { background: #FEF3C7; color: #B45309; }
+    .p-baja { background: #E8F5E9; color: #27AE60; }
+    /* ─── Projects ───────────────────────── */
+    .project-list { display: flex; flex-direction: column; gap: 6px; }
+    .project-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px; background: var(--bg);
+      text-decoration: none; color: inherit; transition: background 0.15s;
+    }
+    .project-row:hover { background: var(--accent-light); }
+    .project-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .project-status {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      background: var(--accent-light); color: var(--accent); font-weight: 600;
+    }
+    /* ─── Events / Email ─────────────────── */
+    .event-list { display: flex; flex-direction: column; gap: 4px; }
+    .event-row {
+      display: flex; gap: 10px; padding: 6px 8px; border-radius: 8px; align-items: flex-start;
+    }
+    .event-time {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      white-space: nowrap; padding-top: 1px; min-width: 44px;
+    }
+    .event-title { font-size: 13px; }
+    .email-row {
+      padding: 6px 8px; border-radius: 8px; transition: background 0.15s;
+    }
+    .email-row:hover { background: var(--bg); }
+    .email-subject { font-size: 13px; font-weight: 600; }
+    .email-from { font-size: 11px; color: var(--text-muted); }
+    /* ─── Actions ────────────────────────── */
+    .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .action-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 12px 8px; border-radius: 12px; cursor: pointer;
+      border: none; transition: all 0.15s; font-family: inherit;
+    }
+    .action-btn:active { transform: scale(0.96); }
+    .action-btn .icon { font-size: 22px; }
+    .action-btn .label { font-size: 11px; font-weight: 600; }
+    .btn-deploy { background: var(--primary); color: white; }
+    .btn-deploy:hover { background: #243F6A; }
+    .btn-task { background: #EBF3FB; color: var(--accent); }
+    .btn-task:hover { background: #D5E8F5; }
+    .btn-event { background: #FEF3C7; color: #B45309; }
+    .btn-event:hover { background: #FDE68A; }
+    .btn-email { background: #F0FFF4; color: #27AE60; }
+    .btn-email:hover { background: #DCFCE7; }
+    /* ─── Deploy dropdown ────────────────── */
+    .deploy-section { margin-top: 4px; }
+    .deploy-select {
+      width: 100%; padding: 8px 10px; border-radius: 8px;
+      border: 1.5px solid var(--border); font-size: 13px;
+      background: white; color: var(--text); font-family: inherit;
+      margin-bottom: 8px;
+    }
+    .deploy-go-btn {
+      width: 100%; padding: 10px; border-radius: 10px; border: none;
+      background: var(--primary); color: white; font-size: 14px;
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .deploy-go-btn:hover { background: #243F6A; }
+    .deploy-go-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* ─── n8n workflows ──────────────────── */
+    .workflow-list { display: flex; flex-direction: column; gap: 5px; }
+    .workflow-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 8px; background: var(--bg); font-size: 13px;
+    }
+    .workflow-name { flex: 1; font-size: 12px; }
+    /* ─── Feed ───────────────────────────── */
+    .feed-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+    .feed-item {
+      display: flex; gap: 8px; padding: 5px 8px; font-size: 12px;
+      border-left: 2px solid var(--border); margin-left: 4px;
+    }
+    .feed-time { color: var(--text-muted); white-space: nowrap; font-size: 11px; min-width: 48px; }
+    .feed-text { color: var(--text); }
+    /* ─── Tabs ───────────────────────────── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+    .tab {
+      flex: 1; padding: 7px 4px; border: none; background: var(--bg);
+      border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text-muted); font-family: inherit; transition: all 0.15s;
+    }
+    .tab.active { background: var(--accent); color: white; }
+    /* ─── Modal ──────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 200; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .modal {
+      background: white; border-radius: 20px 20px 0 0;
+      padding: 20px; width: 100%; max-width: 600px;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
+    .form-group { margin-bottom: 12px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    .form-input {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit;
+      outline: none; transition: border 0.15s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-select {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit; background: white;
+    }
+    .btn-primary {
+      width: 100%; padding: 12px; border: none; border-radius: 12px;
+      background: var(--primary); color: white; font-size: 15px;
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      margin-top: 4px; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #243F6A; }
+    .btn-cancel {
+      width: 100%; padding: 11px; border: 1.5px solid var(--border);
+      border-radius: 12px; background: white; font-size: 14px;
+      cursor: pointer; font-family: inherit; margin-top: 8px; color: var(--text-muted);
+    }
+    /* ─── Toast ──────────────────────────── */
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--primary); color: white; padding: 10px 20px;
+      border-radius: 30px; font-size: 13px; z-index: 300;
+      animation: fadeInUp 0.3s ease;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    /* ─── Loading skeleton ───────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #E2E8F0 25%, #F0F4F8 50%, #E2E8F0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 6px; height: 14px; margin: 4px 0;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .skeleton-row { display: flex; gap: 8px; align-items: center; padding: 4px 0; }
+    /* ─── Empty state ────────────────────── */
+    .empty { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+    .empty-icon { font-size: 28px; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="header-title">⚡ itopy.ai</div>
+      <div class="header-sub">Dashboard de Control</div>
+    </div>
+    <div class="header-right">
+      <div class="time-badge" id="clock"></div>
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()" title="Actualizar">↻</button>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid">
+
+    <!-- VPS Status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🖥</span>
+        <span class="card-title">VPS Status</span>
+        <span class="card-badge" id="vps-badge">—</span>
+      </div>
+      <div class="card-body">
+        <div class="container-list" id="vps-list">
+          <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="flex:1"></div></div>
+          <div class="skeleton-row"><div class="skeleton" style="width:10px;height:10px;border-radius:50%"></div><div class="skeleton" style="flex:1"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">⚡</span>
+        <span class="card-title">Acciones Rápidas</span>
+      </div>
+      <div class="card-body">
+        <div class="actions-grid">
+          <button class="action-btn btn-deploy" onclick="showDeploy()">
+            <span class="icon">🚀</span><span class="label">Deploy</span>
+          </button>
+          <button class="action-btn btn-task" onclick="showNewTask()">
+            <span class="icon">✅</span><span class="label">Nueva Tarea</span>
+          </button>
+          <button class="action-btn btn-event" onclick="showNewEvent()">
+            <span class="icon">📅</span><span class="label">Nuevo Evento</span>
+          </button>
+          <button class="action-btn btn-email" onclick="showEmailSearch()">
+            <span class="icon">📬</span><span class="label">Buscar Email</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tareas + Agenda + Emails -->
+    <div class="card card-full">
+      <div class="card-header">
+        <span class="card-icon">📋</span>
+        <span class="card-title">Tareas · Agenda · Emails</span>
+        <span class="card-badge" id="tasks-badge">—</span>
+      </div>
+      <div class="card-body">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('tasks', this)">Tareas</button>
+          <button class="tab" onclick="switchTab('calendar', this)">Hoy</button>
+          <button class="tab" onclick="switchTab('email', this)">Emails</button>
+        </div>
+        <div id="tab-tasks">
+          <div class="task-list" id="tasks-list">
+            <div class="skeleton" style="width:80%"></div>
+            <div class="skeleton" style="width:65%"></div>
+            <div class="skeleton" style="width:75%"></div>
+          </div>
+        </div>
+        <div id="tab-calendar" style="display:none">
+          <div class="event-list" id="calendar-list">
+            <div class="skeleton" style="width:80%"></div>
+            <div class="skeleton" style="width:60%"></div>
+          </div>
+        </div>
+        <div id="tab-email" style="display:none">
+          <div id="email-list">
+            <div class="empty"><div class="empty-icon">📬</div>Pulsa "Buscar Email" para cargar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Proyectos Activos -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🚀</span>
+        <span class="card-title">Proyectos Activos</span>
+        <span class="card-badge" id="projects-badge">—</span>
+      </div>
+      <div class="card-body">
+        <div class="project-list" id="projects-list">
+          <div class="skeleton" style="width:80%"></div>
+          <div class="skeleton" style="width:65%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- n8n Automatizaciones -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">⚙️</span>
+        <span class="card-title">Automatizaciones</span>
+        <span class="card-badge" id="n8n-badge">—</span>
+      </div>
+      <div class="card-body">
+        <div class="workflow-list" id="n8n-list">
+          <div class="skeleton" style="width:75%"></div>
+          <div class="skeleton" style="width:60%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feed de Actividad -->
+    <div class="card card-full">
+      <div class="card-header">
+        <span class="card-icon">📡</span>
+        <span class="card-title">Feed de Actividad</span>
+      </div>
+      <div class="card-body">
+        <div class="feed-list" id="feed-list">
+          <div class="empty"><div class="empty-icon">📡</div>Sin actividad reciente</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Deploy Modal -->
+<div class="modal-overlay" id="modal-deploy" style="display:none" onclick="if(event.target===this)closeModal('modal-deploy')">
+  <div class="modal">
+    <div class="modal-title">🚀 Deploy</div>
+    <div class="deploy-section">
+      <div class="form-group">
+        <label class="form-label">Selecciona proyecto</label>
+        <select class="deploy-select" id="deploy-project">
+          <option value="">— cargando proyectos —</option>
+        </select>
+      </div>
+      <button class="deploy-go-btn" id="deploy-go-btn" onclick="executeDeploy()">🚀 Lanzar Deploy</button>
+    </div>
+    <button class="btn-cancel" onclick="closeModal('modal-deploy')">Cancelar</button>
+  </div>
+</div>
+
+<!-- New Task Modal -->
+<div class="modal-overlay" id="modal-task" style="display:none" onclick="if(event.target===this)closeModal('modal-task')">
+  <div class="modal">
+    <div class="modal-title">✅ Nueva Tarea</div>
+    <div class="form-group">
+      <label class="form-label">Título</label>
+      <input type="text" class="form-input" id="task-title" placeholder="Descripción de la tarea..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Prioridad</label>
+      <select class="form-select" id="task-priority">
+        <option value="Alta">🔴 Alta</option>
+        <option value="Media" selected>🟡 Media</option>
+        <option value="Baja">🟢 Baja</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="createTask()">Crear Tarea</button>
+    <button class="btn-cancel" onclick="closeModal('modal-task')">Cancelar</button>
+  </div>
+</div>
+
+<!-- New Event Modal -->
+<div class="modal-overlay" id="modal-event" style="display:none" onclick="if(event.target===this)closeModal('modal-event')">
+  <div class="modal">
+    <div class="modal-title">📅 Nuevo Evento</div>
+    <div class="form-group">
+      <label class="form-label">Título</label>
+      <input type="text" class="form-input" id="event-title" placeholder="Nombre del evento..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fecha y hora inicio</label>
+      <input type="datetime-local" class="form-input" id="event-start" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Duración (minutos)</label>
+      <input type="number" class="form-input" id="event-duration" value="60" min="15" step="15" />
+    </div>
+    <button class="btn-primary" onclick="createEvent()">Crear Evento</button>
+    <button class="btn-cancel" onclick="closeModal('modal-event')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Email Search Modal -->
+<div class="modal-overlay" id="modal-email" style="display:none" onclick="if(event.target===this)closeModal('modal-email')">
+  <div class="modal">
+    <div class="modal-title">📬 Buscar Email</div>
+    <div class="form-group">
+      <label class="form-label">Query (estilo Gmail)</label>
+      <input type="text" class="form-input" id="email-query" placeholder="is:unread, from:cliente@..." value="is:unread" />
+    </div>
+    <button class="btn-primary" onclick="searchEmail()">Buscar</button>
+    <button class="btn-cancel" onclick="closeModal('modal-email')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ─── Config ──────────────────────────────────────────────────────────────────
+const API = ''; // mismo origin
+const TOKEN = localStorage.getItem('dashboard_token') || promptToken();
+
+function promptToken() {
+  const t = prompt('Dashboard access token:');
+  if (t) localStorage.setItem('dashboard_token', t);
+  return t;
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-dashboard-token': TOKEN,
+      ...(opts.headers || {}),
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let state = { projects: [] };
+
+// ─── Feed ─────────────────────────────────────────────────────────────────────
+function addFeed(icon, text) {
+  const list = document.getElementById('feed-list');
+  if (list.querySelector('.empty')) list.innerHTML = '';
+  const now = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `<span class="feed-time">${now}</span><span class="feed-text">${icon} ${text}</span>`;
+  list.prepend(item);
+  if (list.children.length > 20) list.lastElementChild.remove();
+}
+
+// ─── Clock ────────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── VPS ──────────────────────────────────────────────────────────────────────
+async function loadVPS() {
+  const list = document.getElementById('vps-list');
+  try {
+    const data = await apiFetch('/api/vps');
+    const c = data.containers || [];
+    document.getElementById('vps-badge').textContent = `${c.filter(x=>x.running).length}/${c.length}`;
+    list.innerHTML = c.length === 0
+      ? '<div class="empty">Sin contenedores</div>'
+      : c.map(ct => `
+          <div class="container-row">
+            <span class="dot ${ct.running ? 'dot-green' : 'dot-red'}"></span>
+            <span class="container-name">${ct.name}</span>
+            <span class="container-status">${ct.statusText}</span>
+          </div>`).join('');
+    addFeed('🖥', `VPS: ${c.filter(x=>x.running).length} contenedores activos`);
+  } catch(e) {
+    list.innerHTML = `<div class="empty">❌ Error: ${e.message}</div>`;
+  }
+}
+
+// ─── Tasks ────────────────────────────────────────────────────────────────────
+async function loadTasks() {
+  const list = document.getElementById('tasks-list');
+  try {
+    const data = await apiFetch('/api/notion/tasks');
+    const t = data.tasks || [];
+    document.getElementById('tasks-badge').textContent = t.length;
+    list.innerHTML = t.length === 0
+      ? '<div class="empty"><div class="empty-icon">✅</div>Todo al día</div>'
+      : t.slice(0, 8).map(task => {
+          const pClass = { 'Alta': 'p-alta', 'Media': 'p-media', 'Baja': 'p-baja' }[task.priority] || 'p-baja';
+          return `<div class="task-row" onclick="window.open('${task.url}','_blank')">
+            <span class="dot dot-${task.status === 'En progreso' ? 'yellow' : 'gray'}"></span>
+            <div style="flex:1">
+              <div class="task-title">${task.title}</div>
+              <div class="task-meta">${task.status}</div>
+            </div>
+            <span class="priority-badge ${pClass}">${task.priority}</span>
+          </div>`;
+        }).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Calendar ─────────────────────────────────────────────────────────────────
+async function loadCalendar() {
+  const list = document.getElementById('calendar-list');
+  try {
+    const data = await apiFetch('/api/calendar');
+    const ev = data.events || [];
+    list.innerHTML = ev.length === 0
+      ? '<div class="empty"><div class="empty-icon">📅</div>Sin eventos hoy</div>'
+      : ev.map(e => {
+          const t = e.start ? new Date(e.start).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : 'Todo el día';
+          return `<div class="event-row">
+            <span class="event-time">${t}</span>
+            <span class="event-title">${e.summary}</span>
+          </div>`;
+        }).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+async function loadProjects() {
+  const list = document.getElementById('projects-list');
+  try {
+    const data = await apiFetch('/api/notion/projects');
+    const p = data.projects || [];
+    state.projects = p;
+    document.getElementById('projects-badge').textContent = p.length;
+    list.innerHTML = p.length === 0
+      ? '<div class="empty"><div class="empty-icon">🚀</div>Sin proyectos activos</div>'
+      : p.map(proj => `
+          <a class="project-row" href="${proj.url}" target="_blank">
+            <span class="dot dot-green"></span>
+            <span class="project-name">${proj.title}</span>
+            <span class="project-status">${proj.status}</span>
+          </a>`).join('');
+    // Update deploy dropdown
+    const sel = document.getElementById('deploy-project');
+    if (sel) {
+      sel.innerHTML = p.length
+        ? p.map(pr => `<option value="${pr.title.toLowerCase().replace(/\s+/g,'-')}">${pr.title}</option>`).join('')
+        : '<option value="">Sin proyectos activos</option>';
+    }
+  } catch(e) {
+    list.innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── n8n ──────────────────────────────────────────────────────────────────────
+async function loadN8N() {
+  const list = document.getElementById('n8n-list');
+  try {
+    const data = await apiFetch('/api/n8n/workflows');
+    const w = data.workflows || [];
+    document.getElementById('n8n-badge').textContent = w.filter(x=>x.active).length + ' activos';
+    list.innerHTML = w.length === 0
+      ? `<div class="empty">${data.note || 'Sin workflows'}</div>`
+      : w.map(wf => `
+          <div class="workflow-row">
+            <span class="dot ${wf.active ? 'dot-green' : 'dot-gray'}"></span>
+            <span class="workflow-name">${wf.name}</span>
+          </div>`).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Refresh all ─────────────────────────────────────────────────────────────
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  try {
+    await Promise.allSettled([loadVPS(), loadTasks(), loadCalendar(), loadProjects(), loadN8N()]);
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(tab, el) {
+  ['tasks','calendar','email'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
+  });
+  el.closest('.tabs').querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── Modals ───────────────────────────────────────────────────────────────────
+function showDeploy() {
+  // Refresh project list in dropdown
+  const sel = document.getElementById('deploy-project');
+  if (state.projects.length) {
+    sel.innerHTML = state.projects.map(p =>
+      `<option value="${p.title.toLowerCase().replace(/\s+/g,'-')}">${p.title}</option>`).join('');
+  }
+  document.getElementById('modal-deploy').style.display = 'flex';
+}
+function showNewTask() {
+  document.getElementById('task-title').value = '';
+  document.getElementById('modal-task').style.display = 'flex';
+  setTimeout(() => document.getElementById('task-title').focus(), 100);
+}
+function showNewEvent() {
+  const now = new Date();
+  now.setMinutes(Math.ceil(now.getMinutes()/15)*15, 0, 0);
+  document.getElementById('event-start').value = now.toISOString().slice(0,16);
+  document.getElementById('event-title').value = '';
+  document.getElementById('modal-event').style.display = 'flex';
+  setTimeout(() => document.getElementById('event-title').focus(), 100);
+}
+function showEmailSearch() {
+  document.getElementById('modal-email').style.display = 'flex';
+  setTimeout(() => document.getElementById('email-query').focus(), 100);
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+async function executeDeploy() {
+  const project = document.getElementById('deploy-project').value;
+  if (!project) return;
+  const btn = document.getElementById('deploy-go-btn');
+  btn.disabled = true; btn.textContent = '⏳ Lanzando...';
+  try {
+    const data = await apiFetch(`/api/deploy/${project}`, { method: 'POST', body: {} });
+    closeModal('modal-deploy');
+    toast(`🚀 Deploy de ${project} lanzado`);
+    addFeed('🚀', `Deploy lanzado: ${project}`);
+  } catch(e) {
+    toast(`❌ Error: ${e.message}`);
+  } finally {
+    btn.disabled = false; btn.textContent = '🚀 Lanzar Deploy';
+  }
+}
+
+async function createTask() {
+  const title = document.getElementById('task-title').value.trim();
+  const priority = document.getElementById('task-priority').value;
+  if (!title) return document.getElementById('task-title').focus();
+  try {
+    await apiFetch('/api/notion/tasks', { method: 'POST', body: { title, priority } });
+    closeModal('modal-task');
+    toast('✅ Tarea creada en Notion');
+    addFeed('✅', `Tarea creada: ${title}`);
+    await loadTasks();
+  } catch(e) {
+    toast(`❌ Error: ${e.message}`);
+  }
+}
+
+async function createEvent() {
+  const title = document.getElementById('event-title').value.trim();
+  const startRaw = document.getElementById('event-start').value;
+  const duration = parseInt(document.getElementById('event-duration').value) || 60;
+  if (!title || !startRaw) return;
+  const start = new Date(startRaw).toISOString();
+  const end = new Date(new Date(startRaw).getTime() + duration * 60000).toISOString();
+  try {
+    await apiFetch('/api/calendar/events', { method: 'POST', body: { title, start, end } });
+    closeModal('modal-event');
+    toast('📅 Evento creado en Calendar');
+    addFeed('📅', `Evento creado: ${title}`);
+    await loadCalendar();
+  } catch(e) {
+    toast(`❌ Error: ${e.message}`);
+  }
+}
+
+async function searchEmail() {
+  const query = document.getElementById('email-query').value.trim() || 'is:unread';
+  closeModal('modal-email');
+  switchTab('email', document.querySelector('.tab:nth-child(3)'));
+  const list = document.getElementById('email-list');
+  list.innerHTML = '<div class="skeleton" style="width:80%"></div><div class="skeleton" style="width:65%"></div>';
+  try {
+    const data = await apiFetch('/api/email', { method: 'POST', body: { query } });
+    const msgs = data.messages || [];
+    list.innerHTML = msgs.length === 0
+      ? '<div class="empty"><div class="empty-icon">📭</div>Sin resultados</div>'
+      : msgs.map(m => `
+          <div class="email-row">
+            <div class="email-subject">${m.subject || m.Subject || '(sin asunto)'}</div>
+            <div class="email-from">${m.from || m.From || '—'}</div>
+          </div>`).join('');
+    addFeed('📬', `Email search: "${query}" — ${msgs.length} resultado(s)`);
+  } catch(e) {
+    list.innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+  }
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimeout;
+function toast(msg) {
+  clearTimeout(toastTimeout);
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  toastTimeout = setTimeout(() => el.remove(), 3000);
+}
+
+// ─── Service Worker ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+refreshAll();
+// Auto-refresh cada 5 minutos
+setInterval(refreshAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>

@@ -13,7 +13,7 @@
       --gold2:   #f5c842;
       --gold3:   #b8860b;
       --dark:    #080808;
-      --card-bg: rgba(5, 3, 0, 0.82);
+      --card-bg: rgba(5, 3, 0, 0.45); /* Más transparente */
     }
 
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
@@ -21,7 +21,7 @@
     body {
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-end; /* Alineado abajo para no tapar el centro de la foto */
       justify-content: center;
       background-color: var(--dark);
       /* La imagen del flyer va aquí — coloca bg_piloto.jpg junto a este HTML */
@@ -30,7 +30,7 @@
       background-position: center top;
       background-attachment: fixed;
       font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
-      padding: 20px;
+      padding: 20px 20px 40px 20px;
     }
 
     /* Overlay oscuro sobre la imagen para legibilidad */
@@ -40,8 +40,8 @@
       inset: 0;
       background: linear-gradient(
         to bottom,
-        rgba(0,0,0,0.55) 0%,
-        rgba(0,0,0,0.70) 60%,
+        rgba(0,0,0,0.1) 0%,
+        rgba(0,0,0,0.4) 50%,
         rgba(0,0,0,0.85) 100%
       );
       pointer-events: none;
@@ -53,7 +53,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(212,160,23,0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(212,160,23,0.1) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
